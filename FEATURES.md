@@ -4,7 +4,7 @@ The developer preview invites feedback on implemented workflows and does not cla
 
 | Workflow | Implementation | Validation |
 | --- | --- | --- |
-| OAuth login, PKCE, selective grants, Keychain | Implemented | Live login and restore passed; expiry rotation pending |
+| OAuth login, PKCE, selective grants, Keychain | Implemented | Live login and restore passed; local refresh, token rotation and rejection tests passed; live expiry rotation pending |
 | Optional member access | Implemented, consent remains user-controlled | Member consent completed by user; variables and account profile observed live |
 | Private project creation | Native workspace selector and explicit confirmation implemented | Live creation pending |
 | Workspace overview, sidebar selection and back navigation | Project selector on startup, workspace filtering, account greeting and notification access errors | Sidebar project selection, project-card entry and return from service details observed live; denied notification state observed |

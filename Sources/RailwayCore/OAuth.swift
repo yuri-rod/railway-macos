@@ -62,7 +62,8 @@ public struct OAuthTokens: Codable, Sendable {
     public var needsRefresh: Bool { expiresAt.timeIntervalSinceNow < 60 }
 }
 public struct RailwayOAuth: Sendable {
-    public init() {}
+    private let session: URLSession?
+    public init(session: URLSession? = nil) { self.session = session }
     public func register() async throws -> OAuthRegistration {
         var request = URLRequest(url: URL(string: "https://backboard.railway.com/oauth/register")!)
         request.httpMethod = "POST"
@@ -103,9 +104,9 @@ public struct RailwayOAuth: Sendable {
     private func send<T: Decodable>(_ value: URLRequest) async throws -> T {
         var request = value; request.timeoutInterval = 30
         let config = URLSessionConfiguration.ephemeral
-        let session = URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
-        defer { session.finishTasksAndInvalidate() }
-        let (data, response) = try await session.data(for: request)
+        let client = session ?? URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
+        defer { if session == nil { client.finishTasksAndInvalidate() } }
+        let (data, response) = try await client.data(for: request)
         guard let response = response as? HTTPURLResponse else { throw OAuthFailure.invalidResponse }
         guard (200..<300).contains(response.statusCode) else { throw OAuthFailure.requestFailed(response.statusCode) }
         return try JSONDecoder().decode(T.self, from: data)
