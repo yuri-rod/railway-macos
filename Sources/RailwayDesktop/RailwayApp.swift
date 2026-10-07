@@ -21,6 +21,13 @@ import RailwayCore
         .defaultSize(width: 1360, height: 880)
         .windowToolbarStyle(.unified)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Railway") {
+                    NSApp.orderFrontStandardAboutPanel(options: [
+                        .applicationVersion: Bundle.main.object(forInfoDictionaryKey: "RailwayReleaseVersion") as? String ?? "Development build"
+                    ])
+                }
+            }
             CommandGroup(after: .newItem) {
                 Button("Refresh Projects") { Task { await workspace.refresh() } }
                     .keyboardShortcut("r").disabled(!workspace.connected || workspace.busy)

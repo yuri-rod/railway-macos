@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
+version=$(cat VERSION)
+printf '%s\n' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$' || { printf '%s\n' 'VERSION must use major.minor.patch-beta.number.' >&2; exit 1; }
 swift build -c release
 app="dist/Railway.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
@@ -28,5 +30,8 @@ cat > "$app/Contents/Info.plist" <<'PLIST'
 <key>NSHighResolutionCapable</key><true/>
 </dict></plist>
 PLIST
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${version%-beta.*}" "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${version##*-beta.}" "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :RailwayReleaseVersion string $version" "$app/Contents/Info.plist"
 codesign --force --sign - "$app"
 printf '%s\n' "$PWD/$app"

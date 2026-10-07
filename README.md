@@ -1,12 +1,14 @@
-# Railway for macOS, developer preview
+# Railway for macOS, 0.1.0-beta.1
 
 A native Railway workspace for macOS, built from scratch in Swift, SwiftUI, AppKit and C. Explore service architecture, inspect deployments, work with agents and open SSH terminals in a desktop interface with native charts, glass surfaces and keyboard navigation. Requires macOS 14 or later. No third-party packages. The Railway CLI is needed for SSH connections.
 
 The app runs directly on macOS, with platform UI and a real pseudoterminal. Keychain stores credentials, and project metadata is cached locally. This repository contains source, tests and docs only. Built-in system symbols and a graphite backdrop replace excluded artwork and icon files.
 
-## Preview status and feedback
+## Beta status and feedback
 
-This source-only developer preview is open for testing and community feedback. It is not an official Railway app or a feature-parity release. Local builds use an ad hoc signature; Developer ID signing and notarization remain pending. The acceptance matrix records workflows that still need authenticated testing.
+This source-only beta is open for testing and community feedback. It is not an official Railway app or a feature-parity release. Local builds use an ad hoc signature; Developer ID signing and notarization remain pending. See the [changelog and known limitations](CHANGELOG.md) and the [acceptance matrix](FEATURES.md) before testing.
+
+`VERSION` defines the beta version shown in **Railway > About Railway**. Beta numbers increase for subsequent testing releases; `0.1.0` remains reserved for a release that passes its declared acceptance checks.
 
 Report bugs and suggestions through this repository's Issues using the **Preview feedback** template. Include the app version or commit, macOS version, steps to reproduce, expected behavior and what happened. For access failures, state whether the app has viewer or member access. Remove tokens, variable values, private logs and account details from screenshots and reports. Use GitHub private vulnerability reporting for security issues when enabled; do not post sensitive vulnerability details in public Issues.
 
