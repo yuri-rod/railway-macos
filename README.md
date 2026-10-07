@@ -20,6 +20,16 @@ sh scripts/build-app.sh
 open 'dist/Railway.app'
 ```
 
+To create a local compressed DMG with the app and an Applications shortcut:
+
+```sh
+sh scripts/build-dmg.sh
+```
+
+The DMG and SHA-256 sidecar are written to `dist/`, with the version and host architecture in the filename. Builds target the host architecture, not a universal binary. The script refuses to overwrite an existing DMG. No DMG is uploaded by this command.
+
+Set `CODE_SIGN_IDENTITY` to your Developer ID Application certificate identity to sign the app with hardened runtime and a secure timestamp, and sign the DMG. Signed DMGs use a `-signed` filename suffix. Signing does not notarize the app; Apple notarization remains a separate distribution step.
+
 Local builds use an ad hoc signature and are not notarized. After rebuilding, macOS may ask for access to the app's existing Keychain items. Keychain operations run off the main UI thread, so that prompt does not freeze the interface.
 
 ## Authentication

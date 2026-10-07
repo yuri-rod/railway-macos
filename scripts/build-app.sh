@@ -33,5 +33,9 @@ PLIST
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${version%-beta.*}" "$app/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${version##*-beta.}" "$app/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :RailwayReleaseVersion string $version" "$app/Contents/Info.plist"
-codesign --force --sign - "$app"
+if [ -n "${CODE_SIGN_IDENTITY:-}" ]; then
+    codesign --force --sign "$CODE_SIGN_IDENTITY" --options runtime --timestamp "$app"
+else
+    codesign --force --sign - "$app"
+fi
 printf '%s\n' "$PWD/$app"
