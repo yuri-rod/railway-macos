@@ -53,4 +53,35 @@ final class TerminalSessionTests: XCTestCase {
         policy.connected(); policy.stop()
         XCTAssertNil(policy.nextDelay(exitCode: 255, persistent: true))
     }
+    func testManualStopPreventsFurtherRetriesUntilNewConnection() {
+        var policy = TerminalReconnect()
+        XCTAssertEqual(policy.nextDelay(exitCode: 255, persistent: true), 2)
+        policy.stop()
+        for _ in 0..<10 {
+            XCTAssertNil(policy.nextDelay(exitCode: 255, persistent: true))
+        }
+        XCTAssertEqual(policy.attempt, 1)
+        XCTAssertTrue(policy.stopped)
+        policy.connected()
+        XCTAssertFalse(policy.stopped)
+        XCTAssertEqual(policy.nextDelay(exitCode: 255, persistent: true), 2)
+    }
+    func testNewConnectionRestoresExhaustedRetryBudget() {
+        var policy = TerminalReconnect()
+        for _ in 0..<5 { XCTAssertNotNil(policy.nextDelay(exitCode: 255, persistent: true)) }
+        XCTAssertNil(policy.nextDelay(exitCode: 255, persistent: true))
+        policy.connected()
+        XCTAssertEqual(policy.attempt, 0)
+        XCTAssertEqual((0..<5).compactMap { _ in policy.nextDelay(exitCode: 255, persistent: true) }, [2, 4, 8, 16, 30])
+        XCTAssertNil(policy.nextDelay(exitCode: 255, persistent: true))
+    }
+    func testNonRetryableExitsDoNotConsumeRetryBudget() {
+        var policy = TerminalReconnect()
+        for code: Int32 in [0, 1, 130, 137] {
+            XCTAssertNil(policy.nextDelay(exitCode: code, persistent: true))
+        }
+        XCTAssertNil(policy.nextDelay(exitCode: 255, persistent: false))
+        XCTAssertEqual(policy.attempt, 0)
+        XCTAssertEqual(policy.nextDelay(exitCode: 255, persistent: true), 2)
+    }
 }
