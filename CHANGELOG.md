@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added local compressed DMG packaging with an Applications shortcut and SHA-256 sidecar. Filenames identify the version and host architecture; existing DMGs are not overwritten.
+- Added optional Developer ID Application signing for the app and DMG, with hardened runtime and secure timestamps for the app. Ad hoc signing remains the default.
+- Verified Apple silicon packaging through signature, timestamp, runtime, checksum and read-only mount checks. Notarization remains pending. No binary release asset has been uploaded.
+
 ## 0.1.0-beta.1, 07/10/2026
 
 First versioned source-only beta for community testing. No compiled app or third-party artwork is distributed.

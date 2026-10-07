@@ -6,7 +6,7 @@ The app runs directly on macOS, with platform UI and a real pseudoterminal. Keyc
 
 ## Beta status and feedback
 
-This source-only beta is open for testing and community feedback. It is not an official Railway app or a feature-parity release. Local builds use an ad hoc signature; Developer ID signing and notarization remain pending. See the [changelog and known limitations](CHANGELOG.md) and the [acceptance matrix](FEATURES.md) before testing.
+This source-only beta is open for testing and community feedback. It is not an official Railway app or a feature-parity release. Local builds default to an ad hoc signature; optional Developer ID signing is implemented and verified. Apple notarization remains pending. See the [changelog and known limitations](CHANGELOG.md) and the [acceptance matrix](FEATURES.md) before testing.
 
 `VERSION` defines the beta version shown in **Railway > About Railway**. Beta numbers increase for subsequent testing releases; `0.1.0` remains reserved for a release that passes its declared acceptance checks.
 
@@ -30,7 +30,13 @@ The DMG and SHA-256 sidecar are written to `dist/`, with the version and host ar
 
 Set `CODE_SIGN_IDENTITY` to your Developer ID Application certificate identity to sign the app with hardened runtime and a secure timestamp, and sign the DMG. Signed DMGs use a `-signed` filename suffix. Signing does not notarize the app; Apple notarization remains a separate distribution step.
 
-Local builds use an ad hoc signature and are not notarized. After rebuilding, macOS may ask for access to the app's existing Keychain items. Keychain operations run off the main UI thread, so that prompt does not freeze the interface.
+```sh
+CODE_SIGN_IDENTITY='Developer ID Application: Your Name (TEAMID)' sh scripts/build-dmg.sh
+```
+
+Replace the example identity with your own certificate name from `security find-identity -v -p codesigning`. An Apple silicon DMG has passed app and image signature checks, secure-timestamp and hardened-runtime checks, checksum verification, and a read-only mount check of the app and Applications shortcut. This verifies packaging, not notarization or complete application acceptance. GitHub releases contain source only; no DMG has been published.
+
+Local builds are not notarized. After rebuilding or changing the signing identity, macOS may ask for access to the app's existing Keychain items. Keychain operations run off the main UI thread, so that prompt does not freeze the interface.
 
 ## Authentication
 
