@@ -34,14 +34,21 @@ struct CreateProjectView: View {
         .confirmationDialog("Create \(name) in \(workspaces.first { $0.id == selected }?.name ?? "workspace")?", isPresented: $confirm, titleVisibility: .visible) {
             Button("Create private project") {
                 guard let selected else { return }
+                let account = workspace.sessionID
                 busy = true
                 Task {
                     defer { busy = false }
                     do {
                         guard let api = try await workspace.authorizedAPI() else { throw RailwayError.invalidToken }
+                        guard account == workspace.sessionID else { return }
                         let id = try await api.createProject(workspace: selected, name: name)
-                        await workspace.refresh(); workspace.projectID = id; workspace.selectProject(); dismiss()
-                    } catch { self.error = "\(error.localizedDescription) Refresh projects before retrying if the result is uncertain." }
+                        guard account == workspace.sessionID else { return }
+                        await workspace.refresh()
+                        guard account == workspace.sessionID else { return }
+                        workspace.projectID = id; workspace.selectProject(); dismiss()
+                    } catch {
+                        if account == workspace.sessionID { self.error = "\(error.localizedDescription) Refresh projects before retrying if the result is uncertain." }
+                    }
                 }
             }
         }

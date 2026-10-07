@@ -28,7 +28,7 @@ The beta is open for feedback. Full feature parity is not established. This tabl
 | Agent deep links | Native routes for Railway threads and cloud machines with environment membership checks | Route tests passed; live open pending |
 | Background agent status | Polls while the app runs; menu-bar status and native status links | Member validation pending; app-closed push is not implemented |
 | Bucket browsing and previews | Read-only S3 listing and bounded image/text previews | Signing/endpoint guards tested; live storage validation pending |
-| Offline, role-denied and ambiguous failures | Explicit error states, metadata cache, no automatic mutation retries | Local cases tested; full authenticated recovery pending |
+| Offline, role-denied and ambiguous failures | Explicit error states, metadata cache, no automatic mutation retries; account changes clear prior state | Local cases and account changes tested, including late responses and credential cleanup failure; full authenticated recovery pending |
 | Distribution | Local app and compressed DMG builds; ad hoc default or optional Developer ID signing | Apple silicon app and DMG signatures, hardened runtime, timestamp, checksum and mounted contents verified; notarization and complete release acceptance pending; binaries and third-party artwork are not published |
 
 ## Mutation acceptance environment

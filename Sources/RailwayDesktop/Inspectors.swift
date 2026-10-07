@@ -198,15 +198,22 @@ struct DeploymentView: View {
             Button(rollback ? "Roll back" : "Redeploy") {
                 guard let target = pending else { return }
                 let rollingBack = rollback
+                let account = workspace.sessionID
                 running = true
                 Task {
                     defer { running = false }
                     do {
                         guard let api = try await workspace.authorizedAPI() else { return }
+                        guard account == workspace.sessionID else { return }
                         if rollingBack { try await api.rollback(target.id) }
                         else { _ = try await api.redeploy(target.id) }
-                        await workspace.loadDeployments(); await workspace.loadCanvas()
-                    } catch { workspace.error = "\(error.localizedDescription) Refresh deployment history before retrying; the request may have reached Railway." }
+                        guard account == workspace.sessionID else { return }
+                        await workspace.loadDeployments()
+                        guard account == workspace.sessionID else { return }
+                        await workspace.loadCanvas()
+                    } catch {
+                        if account == workspace.sessionID { workspace.error = "\(error.localizedDescription) Refresh deployment history before retrying; the request may have reached Railway." }
+                    }
                 }
             }
         } message: { Text("Deployment: \(pending?.id ?? "")\nThis changes the running service and can incur usage charges.") }

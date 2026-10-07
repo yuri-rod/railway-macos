@@ -10,7 +10,6 @@ import RailwayCore
     private var seen = Set<String>()
     private var initialized = false
     private var generation = UUID()
-    override init() { super.init(); UNUserNotificationCenter.current().delegate = self }
     func enable() async {
         do {
             enabled = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
@@ -57,7 +56,15 @@ struct NotificationsView: View {
                 Text("Notifications").font(.title2.bold())
                 Spacer()
                 Button(inbox.enabled ? "Notifications enabled" : "Enable desktop alerts") { Task { await inbox.enable() } }.disabled(inbox.enabled)
-                Button("Refresh") { Task { do { if let api = try await workspace.authorizedAPI() { await inbox.refresh(api: api) } } catch { inbox.error = error.localizedDescription } } }
+                Button("Refresh") {
+                    let account = workspace.sessionID
+                    Task {
+                        do {
+                            guard let api = try await workspace.authorizedAPI(), account == workspace.sessionID else { return }
+                            await inbox.refresh(api: api)
+                        } catch { if account == workspace.sessionID { inbox.error = error.localizedDescription } }
+                    }
+                }
             }
             if let error = inbox.error { Text(error).foregroundStyle(.orange).textSelection(.enabled) }
             List(inbox.items) { item in
@@ -74,11 +81,14 @@ struct NotificationsView: View {
                         Button("Inspect resource") { inspect(item) }.disabled(item.notificationInstance.projectId == nil)
                         if item.readAt == nil {
                             Button("Mark read") {
+                                let account = workspace.sessionID
                                 Task {
                                     do {
-                                        guard let api = try await workspace.authorizedAPI() else { return }
-                                        try await api.markNotificationRead(item.id); await inbox.refresh(api: api)
-                                    } catch { inbox.error = error.localizedDescription }
+                                        guard let api = try await workspace.authorizedAPI(), account == workspace.sessionID else { return }
+                                        try await api.markNotificationRead(item.id)
+                                        guard account == workspace.sessionID else { return }
+                                        await inbox.refresh(api: api)
+                                    } catch { if account == workspace.sessionID { inbox.error = error.localizedDescription } }
                                 }
                             }
                         }

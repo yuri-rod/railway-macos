@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
+import UserNotifications
 import RailwayCore
 
 @main struct RailwayNativeApp: App {
@@ -13,10 +14,15 @@ import RailwayCore
     }
     var body: some Scene {
         Window("Railway", id: "workspace") {
-            DesktopView(workspace: workspace)
+            ZStack {
+                DesktopView(workspace: workspace).id(workspace.sessionID)
+            }
                 .frame(minWidth: 980, minHeight: 640)
                 .preferredColorScheme(.dark)
-                .task { await workspace.restore() }
+                .task {
+                    UNUserNotificationCenter.current().delegate = workspace.inbox
+                    await workspace.restore()
+                }
         }
         .defaultSize(width: 1360, height: 880)
         .windowToolbarStyle(.unified)
@@ -36,7 +42,7 @@ import RailwayCore
         MenuBarExtra { WorkspaceMenu(workspace: workspace) } label: {
             Image(nsImage: RailwayMenuIcon.image).accessibilityLabel("Railway")
         }
-        Settings { AccountView(workspace: workspace).padding(28).frame(width: 440).tint(RailwayTheme.accent).preferredColorScheme(.dark) }
+        Settings { AccountView(workspace: workspace).id(workspace.sessionID).padding(28).frame(width: 440).tint(RailwayTheme.accent).preferredColorScheme(.dark) }
     }
 }
 

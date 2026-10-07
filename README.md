@@ -44,7 +44,7 @@ Sign in through the system authentication browser. The app registers a native pu
 
 The tested viewer grant allowed project discovery, deployment history, metrics, agent history, cloud-machine listing and staged-change reads. Railway denied deployment logs, service variables, cloud-task history and notification delivery for that grant. The app displays those errors. Account API tokens are also supported.
 
-Credentials stay in Keychain. Project metadata is cached in Application Support. Logs, variable values, agent messages, storage credentials and object previews stay in memory unless the user explicitly copies or exports them. Session archive markers are stored locally and do not stop cloud execution. Disconnect closes local SSH connections and clears conversations, then removes stored credentials and cached projects. A failure during storage cleanup is reported, but project details and logs can remain visible until cleanup succeeds.
+Credentials stay in Keychain. Project metadata is cached in Application Support. Logs, variable values, agent messages, storage credentials and object previews stay in memory unless the user explicitly copies or exports them. Session archive markers are stored locally and do not stop cloud execution. Changing accounts clears the previous account's project data, drafts and terminal output. Disconnect clears that data immediately, then attempts cache and credential deletion separately. Cleanup failures remain visible as errors; a new sign-in must wait until cleanup finishes.
 
 ## Navigation
 

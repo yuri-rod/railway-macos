@@ -6,5 +6,6 @@ let package = Package(name: "RailwayNative", platforms: [.macOS(.v14)], products
     .target(name: "RailwayCore"),
         .target(name: "TerminalProcess"),
     .executableTarget(name: "RailwayDesktop", dependencies: ["RailwayCore", "TerminalProcess"]),
-    .testTarget(name: "RailwayCoreTests", dependencies: ["RailwayCore", "TerminalProcess"])
+    .testTarget(name: "RailwayCoreTests", dependencies: ["RailwayCore", "TerminalProcess"]),
+    .testTarget(name: "RailwayDesktopTests", dependencies: ["RailwayDesktop"])
 ])

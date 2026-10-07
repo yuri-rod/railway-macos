@@ -49,9 +49,13 @@ import RailwayCore
     private var generation = UUID()
     private var accountGeneration = UUID()
     private let cacheURL: URL
+    private let session: URLSession?
+    private let removeCredentials: (@Sendable () async throws -> Void)?
+    private var disconnecting = false
     var project: Project? { projects.first { $0.id == projectID } }
-    init() {
-        cacheURL = URL.applicationSupportDirectory.appending(path: "RailwayNative/projects.json")
+    init(cacheURL: URL = URL.applicationSupportDirectory.appending(path: "RailwayNative/projects.json"), session: URLSession? = nil,
+         removeCredentials: (@Sendable () async throws -> Void)? = nil) {
+        self.cacheURL = cacheURL; self.session = session; self.removeCredentials = removeCredentials
         do {
             if FileManager.default.fileExists(atPath: cacheURL.path) {
                 let cache = try JSONDecoder().decode(Cache.self, from: Data(contentsOf: cacheURL))
@@ -61,6 +65,7 @@ import RailwayCore
     }
     private struct Cache: Codable { let date: Date; let projects: [Project] }
     func login(writeAccess: Bool = false) async throws {
+        guard !disconnecting else { throw RailwayError.api("Wait for account cleanup to finish before signing in.") }
         guard !signingIn, !restoring else { return }
         signingIn = true
         let request = accountGeneration
@@ -74,12 +79,12 @@ import RailwayCore
     }
     func authorizedAPI() async throws -> RailwayAPI? {
         guard let tokens else { return api }
-        if !tokens.needsRefresh { return try RailwayAPI(token: tokens.accessToken) }
+        if !tokens.needsRefresh { return try RailwayAPI(token: tokens.accessToken, session: session) }
         let request = accountGeneration
         if let refreshTask {
             let token = try await refreshTask.value
             guard request == accountGeneration else { throw CancellationError() }
-            return try RailwayAPI(token: token)
+            return try RailwayAPI(token: token, session: session)
         }
         let task = Task<String, Error> {
             guard let client = try await Credentials.shared.read(account: "oauth-client") else { throw OAuthFailure.expired }
@@ -95,10 +100,10 @@ import RailwayCore
         }
         refreshTask = task
         defer { if request == accountGeneration { refreshTask = nil } }
-        return try RailwayAPI(token: await task.value)
+        return try RailwayAPI(token: await task.value, session: session)
     }
     func restore() async {
-        guard !restoring, !connected else { return }
+        guard !restoring, !connected, !disconnecting else { return }
         restoring = true
         defer { restoring = false }
         let request = accountGeneration
@@ -117,10 +122,11 @@ import RailwayCore
         } catch { if request == accountGeneration { self.error = error.localizedDescription } }
     }
     func connect(_ token: String, save: Bool = true) async throws {
+        guard !disconnecting else { throw RailwayError.api("Wait for account cleanup to finish before signing in.") }
         guard !busy else { return }
         busy = true; defer { busy = false }
         let request = accountGeneration
-        let client = try RailwayAPI(token: token)
+        let client = try RailwayAPI(token: token, session: session)
         let result = try await client.projects()
         guard accountGeneration == request else { throw CancellationError() }
         if save {
@@ -129,13 +135,8 @@ import RailwayCore
             tokens = nil
         }
         guard accountGeneration == request else { throw CancellationError() }
-        accountGeneration = UUID()
-        refreshTask?.cancel(); refreshTask = nil
-        accountProfile = nil; accountProfileError = nil; loadingAccountProfile = false
-        submittedPatchID = nil; submittedPatch = nil; submittedPatchError = nil; submittedPatchEnvironment = ""
-        conversation.reset(environment: ""); inbox.reset(); terminal.disconnect()
-        cloudTasks = []; cloudTaskError = nil
-        api = client; connected = true; cloudPollDenied = false; updateProjects(result); error = nil
+        clearAccountState()
+        api = client; connected = true; updateProjects(result)
         try cache(); beginMonitoring()
     }
     func refresh() async {
@@ -274,21 +275,38 @@ import RailwayCore
         if favorites.contains(id) { favorites.remove(id) } else { favorites.insert(id) }
         UserDefaults.standard.set(Array(favorites), forKey: "favorites")
     }
-    func disconnect() async {
+    private func clearAccountState() {
         submittedPatchID = nil; submittedPatch = nil; submittedPatchError = nil; submittedPatchEnvironment = ""
         accountProfile = nil; accountProfileError = nil; loadingAccountProfile = false
         conversation.reset(environment: ""); inbox.reset(); terminal.disconnect()
+        terminal.screen = TerminalScreen(rows: terminal.screen.rows, columns: terminal.screen.columns); terminal.targetLabel = ""
         pendingAgentThread = nil; pendingCloudMachine = nil; pendingTerminalTarget = nil; pendingTerminalLabel = ""
-        tokens = nil; api = nil; connected = false; cloudTasks = []; cloudTaskError = nil; cloudPollDenied = false; generation = UUID()
-        accountGeneration = UUID(); canvasGeneration = UUID(); canvas = nil
+        cloudTasks = []; cloudTaskError = nil; cloudPollDenied = false; generation = UUID()
+        accountGeneration = UUID(); canvasGeneration = UUID(); canvas = nil; canvasLoading = false
+        selectedProjectID = nil; projects = []; projectID = nil; environmentID = ""; serviceID = nil
+        deployments = []; logs = []; logDeployment = nil; agentDraft = ""; cachedAt = nil; error = nil
         refreshTask?.cancel(); refreshTask = nil
         monitorTask?.cancel(); monitorTask = nil
+    }
+    func disconnect() async {
+        guard !disconnecting else { return }
+        disconnecting = true
+        defer { disconnecting = false }
+        clearAccountState()
+        tokens = nil; api = nil; connected = false
+        var failures: [String] = []
         do {
-            try await Credentials.shared.delete(account: "oauth-session")
-            try await Credentials.shared.delete()
             if FileManager.default.fileExists(atPath: cacheURL.path) { try FileManager.default.removeItem(at: cacheURL) }
-            generation = UUID(); selectedProjectID = nil; api = nil; connected = false; projects = []; projectID = nil
-            deployments = []; logs = []; logDeployment = nil; agentDraft = ""; cachedAt = nil
-        } catch { self.error = error.localizedDescription }
+        } catch { failures.append(error.localizedDescription) }
+        if let removeCredentials {
+            do { try await removeCredentials() }
+            catch { failures.append(error.localizedDescription) }
+        } else {
+            for account in ["oauth-session", "api-token"] {
+                do { try await Credentials.shared.delete(account: account) }
+                catch { failures.append(error.localizedDescription) }
+            }
+        }
+        if !failures.isEmpty { error = failures.joined(separator: "\n") }
     }
 }

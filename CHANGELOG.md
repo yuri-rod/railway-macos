@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clear project data, drafts and terminal output when accounts change or disconnect. Ignore late responses from the previous account and keep data cleared if local credential cleanup fails.
+- Add local desktop regressions for account changes, delayed responses and logout failures without using saved credentials or live Railway resources.
 - Added local compressed DMG packaging with an Applications shortcut and SHA-256 sidecar. Filenames identify the version and host architecture; existing DMGs are not overwritten.
 - Added optional Developer ID Application signing for the app and DMG, with hardened runtime and secure timestamps for the app. Ad hoc signing remains the default.
 - Verified Apple silicon packaging through signature, timestamp, runtime, checksum and read-only mount checks. Notarization remains pending. No binary release asset has been uploaded.
