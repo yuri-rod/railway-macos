@@ -1,6 +1,6 @@
 # Visual assets
 
-This source-only preview does not distribute Railway logos, service icon files, the welcome illustration, app icons, screenshots or compiled assets. The interface uses native system-symbol and graphite-background fallbacks when those optional resources are absent.
+This source-only beta excludes Railway logos, service icon files, the welcome illustration, app icons, screenshots and compiled assets. The interface uses system symbols and a graphite background when those optional resources are absent.
 
 Railway retains ownership of its trademarks. This client is independent and is not endorsed by Railway.
 

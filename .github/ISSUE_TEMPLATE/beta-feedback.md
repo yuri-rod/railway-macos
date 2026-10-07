@@ -1,6 +1,6 @@
 ---
-name: Preview feedback
-about: Report a bug or suggest an improvement in the developer preview.
+name: Beta feedback
+about: Report a bug or suggest an improvement in the macOS beta.
 title: ''
 labels: ''
 assignees: ''

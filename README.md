@@ -1,16 +1,16 @@
 # Railway for macOS, 0.1.0-beta.1
 
-A native Railway workspace for macOS, built from scratch in Swift, SwiftUI, AppKit and C. Explore service architecture, inspect deployments, work with agents and open SSH terminals in a desktop interface with native charts, glass surfaces and keyboard navigation. Requires macOS 14 or later. No third-party packages. The Railway CLI is needed for SSH connections.
+A native Railway client built in Swift, SwiftUI, AppKit and C. It includes service architecture, deployments, agent workflows and an SSH terminal, with native charts, translucent surfaces and keyboard navigation. Requires macOS 14 or later and Railway CLI for SSH connections. The Swift package has no third-party dependencies.
 
-The app runs directly on macOS, with platform UI and a real pseudoterminal. Keychain stores credentials, and project metadata is cached locally. This repository contains source, tests and docs only. Built-in system symbols and a graphite backdrop replace excluded artwork and icon files.
+Keychain stores credentials, and project metadata is cached locally. The terminal uses a native pseudoterminal. This repository contains source, tests and docs only. System symbols and a graphite background replace artwork and icon files that are not distributed here.
 
 ## Beta status and feedback
 
-This source-only beta is open for testing and community feedback. It is not an official Railway app or a feature-parity release. Local builds default to an ad hoc signature; optional Developer ID signing is implemented and verified. Apple notarization remains pending. See the [changelog and known limitations](CHANGELOG.md) and the [acceptance matrix](FEATURES.md) before testing.
+This independent, source-only beta is open for testing and feedback. Full feature parity is not established. Local builds default to an ad hoc signature; optional Developer ID signing has passed local checks. Apple notarization remains pending. Read the [changelog and known limitations](CHANGELOG.md) and [workflow validation status](FEATURES.md) before testing.
 
 `VERSION` defines the beta version shown in **Railway > About Railway**. Beta numbers increase for subsequent testing releases; `0.1.0` remains reserved for a release that passes its declared acceptance checks.
 
-Report bugs and suggestions through this repository's Issues using the **Preview feedback** template. Include the app version or commit, macOS version, steps to reproduce, expected behavior and what happened. For access failures, state whether the app has viewer or member access. Remove tokens, variable values, private logs and account details from screenshots and reports. Use GitHub private vulnerability reporting for security issues when enabled; do not post sensitive vulnerability details in public Issues.
+Report bugs and suggestions in this repository's Issues using the **Beta feedback** template. Include the app version or commit, macOS version, steps to reproduce, expected behavior and what happened. For access failures, state whether the app has viewer or member access. Remove tokens, variable values, private logs and account details from screenshots and reports. Use GitHub private vulnerability reporting for security issues when enabled; do not post sensitive vulnerability details in public Issues.
 
 ## Build
 
@@ -34,7 +34,7 @@ Set `CODE_SIGN_IDENTITY` to your Developer ID Application certificate identity t
 CODE_SIGN_IDENTITY='Developer ID Application: Your Name (TEAMID)' sh scripts/build-dmg.sh
 ```
 
-Replace the example identity with your own certificate name from `security find-identity -v -p codesigning`. An Apple silicon DMG has passed app and image signature checks, secure-timestamp and hardened-runtime checks, checksum verification, and a read-only mount check of the app and Applications shortcut. This verifies packaging, not notarization or complete application acceptance. GitHub releases contain source only; no DMG has been published.
+Replace the example identity with your certificate name from `security find-identity -v -p codesigning`. The Apple silicon DMG passed checks for app and image signatures, secure timestamps, hardened runtime, checksums, and mounted contents. These checks cover packaging; notarization and full application testing remain pending. GitHub releases contain source only; no DMG has been published.
 
 Local builds are not notarized. After rebuilding or changing the signing identity, macOS may ask for access to the app's existing Keychain items. Keychain operations run off the main UI thread, so that prompt does not freeze the interface.
 
@@ -42,9 +42,9 @@ Local builds are not notarized. After rebuilding or changing the signing identit
 
 Sign in through the system authentication browser. The app registers a native public OAuth client and uses PKCE, selective resource grants and refresh-token rotation. Viewer access is the default. In Account, enable **Allow service management** before signing in to request member access for the projects or workspaces selected on Railway's consent page. The app does not approve that consent page.
 
-The verified viewer grant permits project discovery, deployment history, metrics, agent history, cloud-machine listing and staged-change reads. It was denied deployment logs, service variables, cloud-task history and notification delivery. Controls report those server errors. Account API tokens are an advanced alternative.
+The tested viewer grant allowed project discovery, deployment history, metrics, agent history, cloud-machine listing and staged-change reads. Railway denied deployment logs, service variables, cloud-task history and notification delivery for that grant. The app displays those errors. Account API tokens are also supported.
 
-Credentials stay in Keychain. Project metadata is cached in Application Support. Logs, variable values, agent messages, storage credentials and object previews stay in memory unless the user explicitly copies or exports them. Session archive markers are stored locally and do not stop cloud execution. Disconnect clears credentials, cached projects, in-memory conversations and local SSH connections.
+Credentials stay in Keychain. Project metadata is cached in Application Support. Logs, variable values, agent messages, storage credentials and object previews stay in memory unless the user explicitly copies or exports them. Session archive markers are stored locally and do not stop cloud execution. Disconnect closes local SSH connections and clears conversations, then removes stored credentials and cached projects. A failure during storage cleanup is reported, but project details and logs can remain visible until cleanup succeeds.
 
 ## Navigation
 
@@ -66,10 +66,14 @@ The overview greets the connected account and links to unread alerts and notices
 
 ## Validation and remaining work
 
-See [FEATURES.md](FEATURES.md) for the acceptance matrix. Local tests cover response failures, OAuth validation, stream parsing, request scoping, variable handling, topology extraction, storage request validation, deep links, terminal screen behavior and a real local PTY process and an interactive Vim session. These tests do not establish successful cloud mutations.
+See [FEATURES.md](FEATURES.md) for workflow validation status. Local tests cover response failures, OAuth validation, stream parsing, request scoping, variable handling, topology extraction, storage request validation, deep links and terminal screen behavior. They also run a local pseudoterminal (PTY) process and an interactive Vim session. Cloud changes still require authenticated testing.
 
-OAuth login and restore, project discovery, service canvas reads, deployment history, metrics, agent history, cloud-machine reads and staged-change reads have passed authenticated checks. Member access has been authorized and variable reads have been observed in the app, but notification delivery remains denied by the current grant. Each workflow requires the corresponding resource permissions; live mutation acceptance also requires an explicitly selected disposable test environment. End-to-end SSH/TUI behavior, storage object access, cloud changes, remote notification delivery, OAuth expiry rotation and full feature parity remain unverified. The terminal implements a bounded VT-style subset; it is not certified as fully xterm-compatible. Geometry is capped at 200 rows and 400 columns, each cell retains at most 64 UTF-8 bytes, and scrollback retains at most 2,000 rows. Oversized combining sequences are truncated with a visible notice. Authentication detection retains an 8 KB byte window and checks each complete bounded PTY read before eviction. Regression tests cover combining floods, split Unicode, alternate screens, scrollback, reset and failure detection. Server-side session archiving and app-closed push delivery are not implemented.
+OAuth login and restore, project discovery, service canvas reads, deployment history, metrics, agent history, cloud-machine reads and staged-change reads have passed authenticated checks. Variable reads were observed with member access. Notification delivery was denied in the tested session. Each workflow requires the corresponding resource permissions; live mutation tests also require an explicitly selected disposable environment.
 
-See [BRANDING.md](BRANDING.md) for the visual asset boundary.
+End-to-end SSH and terminal application behavior, storage object access, cloud changes, remote notification delivery and OAuth expiry rotation remain unverified. Server-side session archiving and push delivery while the app is closed are not implemented.
+
+The terminal supports a bounded subset of VT-style behavior and is not fully xterm-compatible. It allows up to 200 rows and 400 columns, 64 UTF-8 bytes per cell and 2,000 scrollback rows. Oversized combining sequences are truncated with a visible notice. Authentication detection retains an 8,192-byte window and checks each complete bounded PTY read before discarding older output. Regression tests cover combining floods, split Unicode, alternate screens, scrollback, reset and failure detection.
+
+See [BRANDING.md](BRANDING.md) for the artwork and icon policy.
 
 This project is not affiliated with or endorsed by Railway.

@@ -1,6 +1,6 @@
-# Developer preview acceptance
+# Beta validation status
 
-The developer preview invites feedback on implemented workflows and does not claim full parity. A release is parity-complete only after its implemented workflows pass authenticated validation. A visible control, local fixture or successful build does not establish server behavior. This matrix separates implemented behavior, authenticated observations and acceptance checks that remain open.
+The beta is open for feedback. Full feature parity is not established. This table records what is implemented, what has been tested locally or against Railway, and what still needs testing. A successful build or local test does not verify the corresponding server operation.
 
 | Workflow | Implementation | Validation |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ The developer preview invites feedback on implemented workflows and does not cla
 
 Live mutation checks must use an explicitly selected disposable project/environment. They must verify returned server state for variable saves, deployment changes, staged apply, cloud-agent creation, task dispatch, decisions, sleep/wake and notification read state. A failed or timed-out request must be reconciled before retrying. No production mutation has been executed as part of implementation validation.
 
-## Terminal boundary
+## Terminal limits
 
 The renderer supports ANSI colors, cursor addressing, erase/insert/delete, scroll regions, alternate screens, line drawing, bracketed paste and common control/function keys. It does not claim complete xterm compatibility. Mouse-reporting applications, complex composed emoji, IME composition, and extended terminal protocols need further acceptance work.
 
